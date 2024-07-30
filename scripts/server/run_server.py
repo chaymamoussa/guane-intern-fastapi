@@ -4,10 +4,11 @@ Run ``python run_server.py --help`` to see the options.
 """
 import os
 from typing import Optional
-
+import sys
 import uvicorn
 from typer import Typer, Option
 
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../..')
 from scripts.utils._manage_services import setup_services, teardown_services
 from scripts.utils._celery import start_celery_worker
 
