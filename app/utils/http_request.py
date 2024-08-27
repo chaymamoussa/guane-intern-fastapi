@@ -41,7 +41,8 @@ def post_file_to_uri(
     uri: str = sttgs.get('UPLOAD_FILE_URI'),
     file_content: str = 'image/png',
     *,
-    message: str
+    message: str,
+    verify: bool = True  # Add verify parameter here
 ) -> Union[req.Response, str]:
     """Post a file to uri."""
     # if file does not exist, post a text file
@@ -51,7 +52,7 @@ def post_file_to_uri(
         file_content = 'text/plain'
         message = 'Original file was replaced by api.'
         with open(upload_file_path, 'w') as save_file:
-            save_file.write('Hello guane, this is Juan Esteban Aristizábal!')
+            save_file.write('Hello chayma!')
 
     # Read file and upload it to uri it using requests library
     with open(upload_file_path, 'rb') as payload:
@@ -68,9 +69,21 @@ def post_file_to_uri(
                 uri,
                 files=files_to_upload,
                 timeout=req_timeout,
+                verify=False  # Disable SSL verification
             )
         except req.exceptions.Timeout:
             return time_out_message(uri, req_timeout)
+
+        # Log response content for debugging
+        print("Response Content:", request.text)
+        print(f"Response Status Code: {request.status_code}")
+        print(f"Response Content-Type: {request.headers.get('Content-Type')}")
+        print(f"Response Content: {request.text}")
+
+        if request.status_code == 500:
+            print("Server error: Internal Server Error (500)")
+            print("Response content:", request.text)  # Print response content for debugging
+            return None
 
         # Save a copy of the file just to verify that the uploaded object was
         # correctly read
@@ -96,6 +109,8 @@ def post_to_uri(
     except req.exceptions.Timeout:
         raise req.exceptions.Timeout(time_out_message(api_uri, req_timeout))
 
+    # Log response content for debugging
+    print("Response Content:", response.text)
     data_json = response.json()
 
     status_code_is_not_expected = (

@@ -25,9 +25,9 @@ async def post_file_to_guane(
         superuser_crud.get_current_active_user
     )
 ) -> Any:
-    """With an empy body request to this endpoint, the api sends a a locally
-    stored file to a previously defined endpoint (in this case, guane's test
-    api).
+    """With an empty body request to this endpoint, the API sends a locally
+    stored file to a previously defined endpoint (in this case, Guane's test
+    API).
     """
     this_file_path = Path(__file__).parent.absolute()
     upload_file_path = join_relative_path(
@@ -37,14 +37,17 @@ async def post_file_to_guane(
 
     upload_req = post_file_to_uri(
         upload_file_path,
-        message='Hello, guane. This is Juan Esteban Aristizabal!'
+        message='Hello chayma!',
+        verify=False  # Disable SSL verification for testing purposes
     )
+    print("################################")
+    print(upload_req)
 
-    # If timeout in upload_request
+    # If timeout in upload_request or request fails
     if not isinstance(upload_req, req.Response):
         if upload_req:
             raise HTTPException(
-                502,
+                status_code=502,
                 detail={
                     'success': False,
                     'remote_server_response': None,
@@ -53,10 +56,17 @@ async def post_file_to_guane(
                 }
             )
         else:
-            raise HTTPException(502)
+            raise HTTPException(status_code=502)
+
+    # Try to extract JSON data from the response
+    try:
+        remote_server_response = upload_req.json()
+    except ValueError:  # In case response is not JSON
+        remote_server_response = upload_req.text  # Fallback to plain text response
 
     return {
-        'success': True if upload_req.status_code == 201 else False,
-        'remote_server_response': upload_req.json(),
+        'success': upload_req.status_code == 201,
+        'remote_server_response': remote_server_response,
         'remote_server_status_code': upload_req.status_code
     }
+

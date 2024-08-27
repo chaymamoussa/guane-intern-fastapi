@@ -15,14 +15,19 @@ def post_to_uri_task(
     query_uri: str = sttgs['GUANE_WORKER_URI'] + '?task_complexity=0',
     message: Dict[str, Any] = {},
     expected_status_codes: List[int] = [201, 200],
+    verify: bool = True  # Add verify parameter
 ) -> Dict[str, Any]:
     try:
         response = post_to_uri(
             query_uri,
             message,
             expected_status_codes,
+            verify
         )
+        print(response.text)
+        return {'status_code': response.status_code, 'data': dict(response.json())}
     except Exception as e:
         self.retry(countdown=3, exc=e)
+        return {'status_code': None, 'error': str(e)}
 
-    return {'status_code': response.status_code, 'data': dict(response.json())}
+
