@@ -6,12 +6,18 @@ from app.api.routers import (
     users_router,
     upload_file_router,
     security_router,
-    tasks_router
+    tasks_router,
+    router
 )
 
 
 api_router = APIRouter()
 
+api_router.include_router(
+    router,
+    prefix=sttgs.get('API_PREFIX', '/test'),
+    tags=['test']
+)
 
 api_router.include_router(
     security_router,

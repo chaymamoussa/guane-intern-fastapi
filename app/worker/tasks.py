@@ -3,7 +3,19 @@ from typing import Dict, List, Any
 from app.config import sttgs
 from app.worker.celery_app import celery_app
 from app.utils.http_request import post_to_uri
+from celery.result import AsyncResult
 
+
+def get_task_status(task_id: str):
+    """Retrieve the status of a task by its ID."""
+    result = AsyncResult(task_id, app=celery_app)
+    return {
+        'task_id': task_id,
+        'status': result.status,
+        'result': result.result,
+        'date_done': result.date_done,
+        'traceback': result.traceback,
+    }
 
 @celery_app.task(
     bind=True,

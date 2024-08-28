@@ -50,6 +50,18 @@ class WebCRUDWrapper:
 
         return enty_by_name
 
+    def get_enty_by_id(self, db: Session, id: int) -> Base:
+        enty_by_id = self.crud.get(db, id=id)
+
+        if not enty_by_id:
+            raise HTTPException(
+                400,
+                detail=f'{self.enty_id.title()} with id \'{id}\' '
+                       'not found.'
+            )
+
+        return enty_by_id
+
     def post_enty_by_name(
         self,
         db: Session,

@@ -9,6 +9,9 @@ from app.api.api import api_router
 # Main app
 app = FastAPI(title=sttgs.get('PROJECT_TITLE'))
 
+
+
+
 app.add_middleware(
     TrustedHostMiddleware,
     allowed_hosts=sttgs.get('ALLOWED_HOSTS', ['*']).split(',')
@@ -23,3 +26,4 @@ app.add_middleware(
 )
 
 app.include_router(api_router, prefix='/api')
+

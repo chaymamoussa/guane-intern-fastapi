@@ -3,6 +3,7 @@ from .users import users_router
 from .upload_file import upload_file_router
 from .security import security_router
 from .tasks import tasks_router
+from .test import router
 
 
 __all__ = [
@@ -11,4 +12,5 @@ __all__ = [
     'upload_file_router',
     'security_router',
     'tasks_router',
+    'router'
 ]

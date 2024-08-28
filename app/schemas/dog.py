@@ -49,3 +49,8 @@ class Dogs(BaseModel):
 
 class AdoptedDogs(BaseModel):
     adopted_dogs: List[Dog]
+
+# Import only when needed inside a function or method
+def some_function():
+    from app.schemas.tasks import TasksListResponse
+

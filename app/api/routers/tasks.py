@@ -1,15 +1,27 @@
-from typing import Any, Awaitable, Dict
+from typing import Any, Awaitable, Dict, List
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+from sqlalchemy.orm import Session
 from celery.result import AsyncResult
 
-from app import schemas
+from app import schemas, crud
+from app.api import deps
 from app.config import sttgs
 from app.crud import superuser_crud
 from app.worker.celery_app import celery_app
-
+from app.models.task_complexity import TaskRequestBody
+from app.worker.tasks import get_task_status
+from app.schemas.tasks import TaskCreate, TaskUpdate
 
 tasks_router = APIRouter()
+
+task_web_crud = crud.WebCRUDWrapper(crud.task, enty_name='task')
+@tasks_router.get('/tasks', response_model=schemas.Tasks)
+async def get_all_tasks(
+    current_superuser: schemas.SuperUser = Depends(superuser_crud.get_current_active_user),
+    db: Session = Depends(deps.get_db)
+):
+    return task_web_crud.get_all_entries(db=db)
 
 
 @tasks_router.post(
@@ -18,14 +30,14 @@ tasks_router = APIRouter()
     status_code=status.HTTP_201_CREATED,
 )
 async def celery_task(
-    task_complexity: int,
+    request_body: TaskRequestBody,
     request: Request,
     current_superuser: schemas.SuperUser = Depends(
         superuser_crud.get_current_active_user
     )
 ) -> Any:
     return await run_task_post_to_uri(
-        task_complexity=task_complexity,
+        task_complexity=request_body.task_complexity,
         get_task_result=False,
     )
 
@@ -36,7 +48,7 @@ async def celery_task(
     status_code=status.HTTP_201_CREATED,
 )
 async def celery_task_not_async(
-    task_complexity: int,
+    request_body: TaskRequestBody,
     request: Request,
     current_superuser: schemas.SuperUser = Depends(
         superuser_crud.get_current_active_user
@@ -56,7 +68,7 @@ async def celery_task_not_async(
     error.
     """
     return await run_task_post_to_uri(
-        task_complexity=task_complexity,
+        task_complexity=request_body.task_complexity,
         get_task_result=True,
         get_result_timeout=10.0
     )

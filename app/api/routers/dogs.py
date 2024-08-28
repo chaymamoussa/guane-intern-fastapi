@@ -64,6 +64,20 @@ async def get_dogs_name(
     """
     return dog_web_crud.get_enty_by_name(db, name)
 
+@dogs_router.get(
+    '/id/{id}',
+    response_model=schemas.Dog,
+    name='Dog info by id.'
+)
+async def get_dog_by_id(
+    *,
+    db: Session = Depends(deps.get_db),
+    id: int
+) -> Any:
+    """Read one ``dog`` entity based on its id
+    """
+    return dog_web_crud.get_enty_by_id(db, id)
+
 
 @dogs_router.post(
     '/{name}',

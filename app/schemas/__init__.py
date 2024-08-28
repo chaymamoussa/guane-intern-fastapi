@@ -1,8 +1,12 @@
 from app.schemas.dog import (
     DogBase, DogCreate, DogUpdate, DogInDBBase, Dog, Dogs, AdoptedDogs
 )
+
 from app.schemas.user import (
     UserBase, UserCreate, UserUpdate, UserInDBBase, User, Users
+)
+from app.schemas.tasks import (
+    TaskStatusResponse, TaskBase, TaskUpdate, TaskCreate, TaskInDBBase, TaskListResponse, Task, Tasks
 )
 from app.schemas.upload import UploadFileStatus
 from app.schemas.security import (
@@ -33,4 +37,13 @@ __all__ = [
     'SuperUser',
     'SuperUserInDB',
     'CeleryTaskResponse',
+    'TaskStatusResponse',
+    'TaskBase',
+    'TaskInDBBase',
+    'TaskCreate',
+    'TaskUpdate',
+    'TaskListResponse',
+    'Task',
+    'Tasks'
+
 ]
