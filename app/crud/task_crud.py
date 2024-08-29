@@ -12,6 +12,8 @@ class TaskCRUD(CRUDBase[Task, TaskCreate, TaskUpdate]):
             return self.update(db, db_obj=db_task, obj_in=task_update)
         return None
 
+
+
     def delete_task(self, db: Session, task_id: int):
         return self.remove(db, id=task_id)
 

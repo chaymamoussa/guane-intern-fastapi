@@ -103,9 +103,13 @@ def post_to_uri(
     expected_status_codes: List[int] = [200, 201]
 ) -> Optional[req.Response]:
     try:
-        response = req.post(api_uri, data=message, timeout=req_timeout)
+        response = req.post(api_uri, json=message, timeout=10)  # Use `json` to send JSON data
+        response.raise_for_status()  # Raise an HTTPError for bad responses
     except req.exceptions.Timeout:
-        raise req.exceptions.Timeout(time_out_message(api_uri, req_timeout))
+        raise req.exceptions.Timeout(f'Timeout occurred while posting to {api_uri}')
+    except req.exceptions.RequestException as e:
+        print(f'Request failed: {e}')  # Log the exception
+        return None
 
     # Log response content for debugging
     print("Response Content:", response.text)
@@ -119,6 +123,7 @@ def post_to_uri(
         return None
 
     return response
+
 
 
 def time_out_message(server, secs: int):

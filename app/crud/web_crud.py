@@ -3,14 +3,14 @@ from typing import Dict, List
 from fastapi import HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from sqlalchemy.inspection import inspect
+
 
 from app.crud.base import CRUDBase
 from app.models.base_class import Base
 
 
 class WebCRUDWrapper:
-    """Wrapper class to avoid duplicate code in API basic crud operations.
-    """
     def __init__(
         self,
         crud: CRUDBase,
@@ -25,7 +25,7 @@ class WebCRUDWrapper:
         """Get all db entries of entity."""
         all_enties = {
             self.enty_name_plural: [
-                self.crud.model(**entity._asdict())
+                self.model_to_dict(entity)
                 for entity in self.crud.get_multi(db)
             ]
         }
@@ -37,6 +37,13 @@ class WebCRUDWrapper:
                 400,
                 detail=f'No {self.enty_name_plural} found'
             )
+
+    def model_to_dict(self, model_instance: Base) -> Dict[str, any]:
+        """Convert a SQLAlchemy model instance to a dictionary."""
+        # Use SQLAlchemy's inspection system to get columns
+        columns = [c.key for c in inspect(model_instance).mapper.column_attrs]
+        return {column: getattr(model_instance, column) for column in columns}
+
 
     def get_enty_by_name(self, db: Session, name: str) -> Base:
         enty_by_name = self.crud.get_by_name(db, name_in=name)
@@ -61,6 +68,29 @@ class WebCRUDWrapper:
             )
 
         return enty_by_id
+
+    def create_entry(
+            self,
+            db: Session,
+            *,
+            entry_data: BaseModel  # Make sure to use this parameter name consistently
+    ) -> Base:
+        """Create a new entry in the database."""
+        try:
+            created_entry = self.crud.create(db, obj_in=entry_data)
+        except Exception:
+            raise HTTPException(
+                500,
+                detail=f'Error while creating {self.enty_name} in the database.'
+            )
+
+        if not created_entry:
+            raise HTTPException(
+                400,
+                detail=f'Create query of {self.enty_name} finished but was not saved.'
+            )
+
+        return created_entry
 
     def post_enty_by_name(
         self,
@@ -137,3 +167,45 @@ class WebCRUDWrapper:
             )
 
         return deleted_enty
+
+    def update_entry(
+            self,
+            db: Session,
+            *,
+            entry_id: int,
+            entry_data: BaseModel
+    ) -> Base:
+        """Update an existing entry in the database."""
+        try:
+            # Fetch the existing entry from the database
+            existing_entry = self.crud.get(db, id=entry_id)
+            if not existing_entry:
+                raise HTTPException(
+                    404,
+                    detail=f'{self.enty_name.title()} with ID {entry_id} not found.'
+                )
+
+            # Update the entry using the CRUD method
+            updated_entry = self.crud.update(
+                db,
+                db_obj=existing_entry,
+                obj_in=entry_data
+            )
+            db.commit()  # Commit the transaction
+        except Exception as e:
+            db.rollback()  # Rollback the transaction on error
+            raise HTTPException(
+                500,
+                detail=f'Error while updating {self.enty_name} with ID {entry_id}: {str(e)}'
+            )
+
+        if not updated_entry:
+            raise HTTPException(
+                400,
+                detail=f'{self.enty_name.title()} with ID {entry_id} was not updated.'
+            )
+
+        return updated_entry
+
+
+

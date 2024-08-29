@@ -34,22 +34,17 @@ async def post_file_to_guane(
     API).
     """
     this_file_path = Path(__file__).parent.absolute()
-    print("#########################")
-    print(this_file_path)
+
     upload_file_path = join_relative_path(
         this_file_path,
         sttgs.get('UPLOAD_FILE_PATH')
     )
-    print("#########################")
-    print(upload_file_path)
 
     upload_req = post_file_to_uri(
         upload_file_path,
         message='Hello chayma!',
         verify=False  # Disable SSL verification for testing purposes
     )
-    print("################################")
-    print(upload_req)
 
     # If timeout in upload_request or request fails
     if not isinstance(upload_req, req.Response):

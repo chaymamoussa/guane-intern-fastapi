@@ -17,29 +17,25 @@ def get_task_status(task_id: str):
         'traceback': result.traceback,
     }
 
-@celery_app.task(
-    bind=True,
-    acks_late=True,
-    retry_kwargs={'max_retries': 2},
-)
-def post_to_uri_task(
-    self,
-    query_uri: str = sttgs['GUANE_WORKER_URI'] + '?task_complexity=0',
-    message: Dict[str, Any] = {},
-    expected_status_codes: List[int] = [201, 200],
-    verify: bool = True  # Add verify parameter
-) -> Dict[str, Any]:
-    try:
-        response = post_to_uri(
-            query_uri,
-            message,
-            expected_status_codes,
-            verify
-        )
-        print(response.text)
-        return {'status_code': response.status_code, 'data': dict(response.json())}
-    except Exception as e:
-        self.retry(countdown=3, exc=e)
-        return {'status_code': None, 'error': str(e)}
 
+@celery_app.task
+def post_to_uri_task(query_uri: str) -> Dict[str, Any]:
+    """Task to post data to a URI and handle the response."""
+    response_data = {'success': False, 'status': 'Unknown error', 'response': None}
+
+    try:
+        # Call the post_to_uri function
+        response = post_to_uri(api_uri=query_uri, message={})
+        if response:
+            response_data['success'] = True
+            response_data['status'] = 'Success'
+            response_data['response'] = response.text  # Capture response text
+        else:
+            response_data['status'] = 'Unexpected status code or response format'
+    except req.exceptions.Timeout as e:
+        response_data['status'] = f'Timeout: {str(e)}'
+    except Exception as e:
+        response_data['status'] = f'Error: {str(e)}'
+
+    return response_data
 
