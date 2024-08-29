@@ -15,7 +15,7 @@ api_router = APIRouter()
 
 api_router.include_router(
     router,
-    prefix=sttgs.get('API_PREFIX', '/test'),
+    prefix=sttgs.get('API_TEST', '/test'),
     tags=['test']
 )
 

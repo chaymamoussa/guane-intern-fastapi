@@ -2,6 +2,7 @@ import os
 from shutil import copyfileobj
 from typing import Any, Dict, List, Optional, Union
 from pathlib import Path
+from shutil import copyfileobj
 
 import requests as req
 
@@ -52,6 +53,7 @@ def post_file_to_uri(
         file_content = 'text/plain'
         message = 'Original file was replaced by api.'
         with open(upload_file_path, 'w') as save_file:
+            print("hereeeeee")
             save_file.write('Hello chayma!')
 
     # Read file and upload it to uri it using requests library
@@ -60,16 +62,15 @@ def post_file_to_uri(
             'file': (
                 upload_file_path.name,
                 payload,
-                file_content,
-                {'message': message}
+                file_content
             )
         }
         try:
             request = req.post(
                 uri,
                 files=files_to_upload,
-                timeout=req_timeout,
-                verify=False  # Disable SSL verification
+                data={'message': message},
+                verify=verify # Disable SSL verification
             )
         except req.exceptions.Timeout:
             return time_out_message(uri, req_timeout)
@@ -92,10 +93,7 @@ def post_file_to_uri(
         )
         with open(save_file_copy_path, 'wb') as save_file_copy:
             payload.seek(0)
-            save_file_copy.seek(0)
             copyfileobj(payload, save_file_copy)
-            save_file_copy.truncate()
-
     return request
 
 
